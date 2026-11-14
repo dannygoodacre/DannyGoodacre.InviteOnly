@@ -1,0 +1,9 @@
+<Solution>
+    <Folder Name="/src/">
+        <Project Path="src\DannyGoodacre.InviteOnly.Example\DannyGoodacre.InviteOnly.Example.csproj" />
+        <Project Path="src\DannyGoodacre.InviteOnly\DannyGoodacre.InviteOnly.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests\DannyGoodacre.InviteOnly.Tests\DannyGoodacre.InviteOnly.Tests.csproj" />
+    </Folder>
+</Solution>

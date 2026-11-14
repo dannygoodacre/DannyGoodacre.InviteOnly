@@ -1,0 +1,67 @@
+name: Code Coverage Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install ReportGenerator Tool
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Run Tests with Coverage
+        run: |
+          dotnet test \
+            --configuration Release \
+            --no-build \
+            --coverage \
+            --coverage-output-format cobertura \
+            --results-directory ./coverage_data
+
+      - name: Generate Report
+        run: |
+          reportgenerator \
+            -reports:./coverage_data/*.cobertura.xml \
+            -targetdir:coverage_report \
+            -reporttypes:"Html;MarkdownSummaryGithub"
+
+      - name: Add Artifact Link to Summary File
+        run: |
+          echo -e "\n---" >> coverage_report/SummaryGithub.md
+          echo -e "## [Full coverage report artifact](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> coverage_report/SummaryGithub.md
+
+      - name: Write to Job Summary
+        run: cat coverage_report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post Coverage Comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          path: coverage_report/SummaryGithub.md
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v6
+        with:
+          name: code-coverage-report
+          path: coverage_report/
